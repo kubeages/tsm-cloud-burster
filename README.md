@@ -5,7 +5,7 @@ K8s app for performing automatic cloud bursting
 (For educational/demo purposes only)
 
 
-![alt](https://github.com/kubeages/tsm-cloud-burster/automatic-cloud-bursting.png)
+![alt](https://github.com/kubeages/tsm-cloud-burster/blob/main/automatic-cloud-bursting.png)
 
 ## Building the image
 
