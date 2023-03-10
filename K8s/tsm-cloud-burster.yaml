@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tsm-cloud-burster-sa
+  namespace: <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING>   
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tsm-cloud-burster-role
+subjects:
+- kind: ServiceAccount
+  name: tsm-cloud-burster-sa
+  namespace: <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING> 
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tsm-cloud-burster
+  namespace: <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsm-cloud-burster 
+  template:
+    metadata:
+      labels:
+        name: tsm-cloud-burster
+    spec:
+      serviceAccountName: tsm-cloud-burster-sa
+      containers:
+      - name: tsm-cloud-burster
+        imagePullPolicy: Always
+        image: tanzueseemea/tsm-cloud-burster
+        command:
+        - /usr/local/bin/tools/cloudburster
+        envFrom:
+        - configMapRef:
+            name: k8s-creds
+        volumeMounts:
+        - name: cloudburster
+          mountPath: /usr/local/bin/tools
+      volumes:
+      - name: cloudburster
+        configMap:
+          name: tsm-cloud-burster-cm
+          items:
+          - key: cloudburster
+            path: cloudburster
+            mode: 0755
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-creds
+  namespace: <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING>
+data:
+  REMOTE_NAMESPACE: <REMOTE_NS_WHERE_TO_BURST_THE_APP>
+  REMOTE_DEPLOYMENT: <REMOTE_DEPLOYMENT_TO_SCALE_WHEN_BURSTING>
+  NAMESPACE: <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING>
+  ASD_NAME: <TSM_AUTOSCALER_NAME>
+  CLOUD_TYPE: k8s
+  K8S_ENDPOINT: <REMOTE_K8S_ENDPOINT>
+  K8S_CA_DATA: <REMOTE_K8S_CA>
+  K8S_CLIENT_CERT_DATA: <REMOTE_K8S_CERT>
+  K8S_CLIENT_KEY_DATA: <REMOTE_K8S_KEY>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tsm-cloud-burster-cm
+  namespace: <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING>
+data:
+  cloudburster: |
+    #!/bin/sh
+    ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+    case $CLOUD_TYPE in
+        "k8s")
+            echo "You selected Kubernetes (k8s)"
+            echo $K8S_CLIENT_CERT_DATA | base64 -d > /tmp/client.crt
+            echo $K8S_CLIENT_KEY_DATA | base64 -d > /tmp/client.key
+            echo $K8S_CA_DATA | base64 -d > /tmp/ca.crt
+            export K8S_AUTH="--server=$K8S_ENDPOINT --client-certificate=/tmp/client.crt --client-key=/tmp/client.key --certificate-authority=/tmp/ca.crt"
+            ;;
+        *)
+            echo "Invalid cloud platform selected"
+            ;;
+    esac
+
+    while true; do
+      if [ "$CLOUD_TYPE" = "k8s" ]; then
+        max_value=$(kubectl --server=https://kubernetes.default --certificate-authority=$ca --token=$token get asd $ASD_NAME -n $NAMESPACE --no-headers | awk '{print $6}')
+        desired_value=$(kubectl --server=https://kubernetes.default --certificate-authority=$ca --token=$token get asd $ASD_NAME -n $NAMESPACE --no-headers | awk '{print $8}')
+        excess=0
+        if [ $max_value -eq $desired_value ]; then
+          wanted=$(kubectl --server=https://kubernetes.default --certificate-authority=$ca --token=$token get asd $ASD_NAME -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.reason=="EnforcingLimit")].message}' | awk '{print $2}')
+          excess=$(($wanted - $max_value))
+          if [ $excess -lt 0 ]; then
+            excess=0
+            echo "No Cloud Bursting! Max replicas $max_value / Desired value $desired_value / Excess on the other cluster=$excess"
+          else
+            echo "Cloud Bursting! Max replicas $max_value / Desired value $desired_value / Excess on the other cluster=$excess"          
+          fi
+        else 
+          echo "No Cloud Bursting! Max replicas $max_value / Desired value $desired_value"
+        fi
+        kubectl scale deploy $REMOTE_DEPLOYMENT --replicas=$excess -n $REMOTE_NAMESPACE $K8S_AUTH
+        sleep 10
+      fi
+    done
