@@ -40,11 +40,11 @@ Inside the folder K8s, you'll find a single file yaml (called tsm-cloud-burster.
 
 Note: if you want to use your own image, just replace 
 
-> image: tanzueseemea/tsm-cloud-burster
+> `image: tanzueseemea/tsm-cloud-burster`
 
 with
 
-> image: <YOUR_REGISTRY>/<YOUR_REPO>/tsm-cloud-burster
+> `image: <YOUR_REGISTRY>/<YOUR_REPO>/tsm-cloud-burster`
 
 ## Deploying the app into K8s
 
