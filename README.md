@@ -9,7 +9,9 @@ K8s app for performing automatic cloud bursting
 
 ## Building the image
 
-Inside the folder Dockerfile, you can find the file to build the image. Steps if you use Docker and you have logged in already into <YOUR_REGISTRY>:
+Inside the folder Dockerfile, you can find the file to build the image. Inside the Dockerfile, replace KUBE_LATEST_VERSION with the version of the K8s cluster where you'll deploy this app.
+
+Steps to build the image if you use Docker and you have logged in already into <YOUR_REGISTRY>:
 
 - build the image
 
