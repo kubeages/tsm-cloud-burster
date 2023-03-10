@@ -28,7 +28,7 @@ If you don't want or cannot build the image, you can use this image:
 
 ## Customizing the K8s deployment
 
-Inside the folder K8s, you'll find a single file yaml (called tsm-cloud-burster.yaml) with all the components you'll need to deploy tsm-cloud-burster app. Some considerations:
+Inside the folder K8s, you'll find a single file yaml (called tsm-cloud-burster.yaml) with all the components you'll need to deploy tsm-cloud-burster app. Just insert your values inside:
 - Replace <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING> with the namespace of the K8s cluster where the app is currently running
 - Replace <REMOTE_NS_WHERE_TO_BURST_THE_APP> with the namespace of the remote cloud-based K8s cluster where the app will be scaled in case of cloud bursting
 - Replace <REMOTE_DEPLOYMENT_TO_SCALE_WHEN_BURSTING> with the name of the deployment of the app running on the remote cloud-based K8s cluster (typically the same deployment that is running in the local K8s cluster). Note: this deployment should be scaled to 0 to show better the cloud-bursting effect.
@@ -38,6 +38,13 @@ Inside the folder K8s, you'll find a single file yaml (called tsm-cloud-burster.
 - Replace <REMOTE_K8S_CERT> with the Certificate of the remote K8s cluster
 - Replace <REMOTE_K8S_DATA> with the Key of the remote K8s cluster
 
+Note: if you want to use your own image, just replace 
+
+> image: tanzueseemea/tsm-cloud-burster
+
+with
+
+> image: <YOUR_REGISTRY>/<YOUR_REPO>/tsm-cloud-burster
 
 ## Deploying the app into K8s
 
