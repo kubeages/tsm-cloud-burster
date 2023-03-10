@@ -31,7 +31,7 @@ If you don't want or cannot build the image, you can use this image:
 Inside the folder K8s, you'll find a single file yaml (called tsm-cloud-burster.yaml) with all the components you'll need to deploy tsm-cloud-burster app. Some considerations:
 - Replace <LOCAL_NAMESPACE_WHERE_APP_IS_RUNNING> with the namespace of the K8s cluster where the app is currently running
 - Replace <REMOTE_NS_WHERE_TO_BURST_THE_APP> with the namespace of the remote cloud-based K8s cluster where the app will be scaled in case of cloud bursting
-- Replace <REMOTE_DEPLOYMENT_TO_SCALE_WHEN_BURSTING> with the name of the deployment of the app running on the remote cloud-based K8s cluster (typically the same deployment that is running in the local K8s cluster)
+- Replace <REMOTE_DEPLOYMENT_TO_SCALE_WHEN_BURSTING> with the name of the deployment of the app running on the remote cloud-based K8s cluster (typically the same deployment that is running in the local K8s cluster). Note: this deployment should be scaled to 0 to show better the cloud-bursting effect.
 - Replace <TSM_AUTOSCALER_NAME> with the name of the TSM autoscaler deployed on the same the namespace of the app running in the local K8s cluster
 - Replace <REMOTE_K8S_ENDPOINT> with the endpoint of the remote K8s cluster
 - Replace <REMOTE_K8S_CA> with the CA of the remote K8s cluster
