@@ -15,14 +15,14 @@ Steps to build the image if you use Docker and you have logged in already into <
 
 - build the image
 
-> `docker build . -t <YOUR_REGISTRY>/tsm-cloud-burster`
+> `docker build . -t <YOUR_REGISTRY>/<YOUR_REPO>/tsm-cloud-burster`
 
 - push the image
 
-> `docker push <YOUR_REGISTRY>/tsm-cloud-burster`
+> `docker push <YOUR_REGISTRY>/<YOUR_REPO>/tsm-cloud-burster`
 
 
-If you don't want or cannot build the image, you can use this image:
+If you don't want or cannot build the image, you can use this image instead:
 **tanzueseemea/tsm-cloud-burster**
 
 
@@ -46,11 +46,13 @@ with
 
 > `image: <YOUR_REGISTRY>/<YOUR_REPO>/tsm-cloud-burster`
 
+
 ## Deploying the app into K8s
 
 Once replaced all the values, just run:
 
 > `kubectl apply -f tsm-cloud-burster.yaml`
+
 
 
 ## Checking the behavior
